@@ -15,8 +15,12 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Brak pliku audio' }, { status: 400 });
   }
 
+  // Strip codec suffix so xAI accepts the MIME type (audio/webm;codecs=opus → audio/webm)
+  const audioBuffer = await audio.arrayBuffer();
+  const cleanBlob = new Blob([audioBuffer], { type: 'audio/webm' });
+
   const grokForm = new FormData();
-  grokForm.append('file', audio, 'recording.webm');
+  grokForm.append('file', cleanBlob, 'recording.webm');
   grokForm.append('model', 'whisper-large-v3');
   grokForm.append('language', 'pl');
   grokForm.append('response_format', 'json');

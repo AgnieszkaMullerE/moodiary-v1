@@ -32,23 +32,6 @@ function FreudAvatar() {
   );
 }
 
-function MicIcon({ recording }: { recording: boolean }) {
-  if (recording) {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-        <rect x="5" y="5" width="14" height="14" rx="2" fill="white" />
-      </svg>
-    );
-  }
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <rect x="9" y="2" width="6" height="12" rx="3" stroke="#767387" strokeWidth="2" />
-      <path d="M5 10c0 3.866 3.134 7 7 7s7-3.134 7-7" stroke="#767387" strokeWidth="2" strokeLinecap="round" />
-      <path d="M12 17v3" stroke="#767387" strokeWidth="2" strokeLinecap="round" />
-      <path d="M9 20h6" stroke="#767387" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 function SendIcon() {
   return (
@@ -73,14 +56,10 @@ export default function FreudChat({
   const [loading, setLoading] = useState(false);
   const [loadingSession, setLoadingSession] = useState(false);
   const [minimized, setMinimized] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const [transcribing, setTranscribing] = useState(false);
   const [contextLabel, setContextLabel] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
   const sentInitialRef = useRef(false);
 
   // Load session when date changes or chat opens
@@ -112,6 +91,13 @@ export default function FreudChat({
       inputRef.current.style.height = '20px';
     }
   }, [text]);
+
+  // Reset sent flag when a new initialMessage arrives (e.g. second voice recording)
+  useEffect(() => {
+    if (initialMessage) {
+      sentInitialRef.current = false;
+    }
+  }, [initialMessage]);
 
   // Pre-fill initial message from InputBar
   useEffect(() => {
@@ -187,46 +173,13 @@ export default function FreudChat({
     }
   }, [open, loadingSession, initialMessage, sendMessage]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage(text);
     }
   };
 
-  const startRecording = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioChunksRef.current = [];
-      const mr = new MediaRecorder(stream);
-      mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
-      mr.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        setTranscribing(true);
-        try {
-          const fd = new FormData();
-          fd.append('audio', blob);
-          const res = await fetch('/api/freud/transcribe', { method: 'POST', body: fd });
-          if (res.ok) {
-            const { text: t } = await res.json();
-            if (t) setText(t);
-          }
-        } catch { /* ignore */ } finally {
-          setTranscribing(false);
-        }
-      };
-      mediaRecorderRef.current = mr;
-      mr.start();
-      setRecording(true);
-    } catch { /* microphone denied */ }
-  }, []);
-
-  const stopRecording = useCallback(() => {
-    mediaRecorderRef.current?.stop();
-    mediaRecorderRef.current = null;
-    setRecording(false);
-  }, []);
 
   if (!open) return null;
 
@@ -259,9 +212,10 @@ export default function FreudChat({
         onClick={onClose}
       />
 
-      {/* Panel */}
+      {/* Panel wrapper — constrains to app width */}
+      <div className="relative pointer-events-none w-full max-w-[430px] mx-auto px-3 pb-3">
       <div
-        className="relative pointer-events-auto flex flex-col bg-white dark:bg-[#18162a] rounded-3xl shadow-2xl mx-3 mb-3"
+        className="pointer-events-auto flex flex-col bg-white dark:bg-[#18162a] rounded-3xl shadow-2xl"
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
@@ -348,7 +302,7 @@ export default function FreudChat({
             <textarea
               ref={inputRef}
               rows={1}
-              value={transcribing ? '' : text}
+              value={text}
               onChange={(e) => {
                 setText(e.target.value);
                 e.target.style.height = 'auto';
@@ -356,39 +310,29 @@ export default function FreudChat({
                 e.target.style.height = Math.min(e.target.scrollHeight, lineH * 4) + 'px';
               }}
               onKeyDown={handleKeyDown}
-              placeholder={transcribing ? 'Transkrybuję...' : 'Napisz do dr Freuda...'}
-              disabled={loading || transcribing}
+              placeholder="Napisz do dr Freuda..."
+              disabled={loading}
               className="flex-1 bg-transparent text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 outline-none disabled:opacity-50 min-w-0 resize-none overflow-y-auto scrollbar-hide leading-5"
               style={{ height: '20px' }}
             />
 
-            {/* Mic / Send */}
+            {/* Send */}
             <button
               type="button"
-              onPointerDown={!recording ? startRecording : undefined}
-              onPointerUp={recording ? stopRecording : undefined}
-              onClick={text.trim() ? () => sendMessage(text) : undefined}
-              disabled={loading || transcribing}
-              className={[
-                'size-10 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-95 disabled:opacity-40',
-                recording
-                  ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-                  : text.trim()
-                    ? 'bg-black dark:bg-white text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/90'
-                    : 'bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-gray-400 hover:bg-gray-300',
-              ].join(' ')}
-              aria-label={recording ? 'Zatrzymaj nagrywanie' : text.trim() ? 'Wyślij' : 'Nagraj'}
+              onClick={() => sendMessage(text)}
+              disabled={loading || !text.trim()}
+              className="size-10 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-95 disabled:opacity-40 bg-black dark:bg-white text-white dark:text-black hover:bg-black/80 dark:hover:bg-white/90"
+              aria-label="Wyślij"
             >
               {loading ? (
                 <div className="size-3.5 rounded-full border-2 border-gray-400/30 border-t-gray-400 animate-spin" />
-              ) : text.trim() ? (
-                <SendIcon />
               ) : (
-                <MicIcon recording={recording} />
+                <SendIcon />
               )}
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
@@ -401,7 +345,7 @@ function MessageBubble({ message }: { message: FreudMessage }) {
     return (
       <div className="flex justify-end">
         <div className="max-w-[78%] bg-black dark:bg-white text-white dark:text-black rounded-2xl rounded-br-sm px-4 py-2.5">
-          <p className="text-sm leading-relaxed">{message.content}</p>
+          <p className="text-sm leading-relaxed break-words">{message.content}</p>
         </div>
       </div>
     );
