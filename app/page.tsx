@@ -1,14 +1,18 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import MoodSelector from '@/components/MoodSelector';
 import WeekBar from '@/components/WeekBar';
-import TipTapEditor from '@/components/TipTapEditor';
-import { saveEntry } from '@/lib/storage';
-import type { Mood } from '@/lib/types';
+import DayView from '@/components/DayView';
+import InputBar from '@/components/InputBar';
+import FreudChat from '@/components/FreudChat';
+import { getEntries, saveEntry } from '@/lib/storage';
+import type { Entry, Mood } from '@/lib/types';
+
+function todayStr(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -27,72 +31,199 @@ function formatTodayLabel(): string {
   });
 }
 
-function todayStr(): string {
-  return new Date().toISOString().slice(0, 10);
+function stripHtml(html: string): string {
+  return html
+    .replace(/<\/p>\s*<p>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .trim();
 }
 
 export default function TodayPage() {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [mood, setMood] = useState<Mood>('neutral');
-  // editorKey wymusza pełny remount TipTap po zapisie → czyste pola
-  const [editorKey, setEditorKey] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(todayStr);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMood, setSelectedMood] = useState<Mood>('neutral');
 
-  const handleSave = useCallback(() => {
-    const now = new Date().toISOString();
-    saveEntry({
-      id: uuidv4(),
-      date: todayStr(),
-      title: title.trim(),
-      content,
-      mood,
-      createdAt: now,
-      updatedAt: now,
+  // Freud chat state
+  const [freudOpen, setFreudOpen] = useState(false);
+  const [freudInitialMessage, setFreudInitialMessage] = useState<string | undefined>();
+
+  const loadEntries = useCallback(async () => {
+    const data = await getEntries();
+    setEntries(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { loadEntries(); }, [loadEntries]);
+
+  const entryDates = useMemo(() => new Set(entries.map((e) => e.date)), [entries]);
+
+  const entryMoods = useMemo(() => {
+    const map: Record<string, Mood> = {};
+    entries.forEach((e) => { map[e.date] = e.mood; });
+    return map;
+  }, [entries]);
+
+  const entryExcerpts = useMemo(() => {
+    const map: Record<string, string> = {};
+    entries.forEach((e) => {
+      const text = stripHtml(e.content);
+      map[e.date] = text.length > 70 ? text.slice(0, 70) + '…' : text;
     });
-    toast.success('Wpis zapisany');
-    // wyczyść formularz
-    setTitle('');
-    setContent('');
-    setMood('neutral');
-    setEditorKey((k) => k + 1);
-  }, [title, content, mood]);
+    return map;
+  }, [entries]);
+
+  const selectedEntry = useMemo(
+    () => entries.find((e) => e.date === selectedDate) ?? null,
+    [entries, selectedDate],
+  );
+
+  useEffect(() => {
+    setSelectedMood(selectedEntry?.mood ?? 'neutral');
+  }, [selectedDate, selectedEntry]);
+
+  const handleMoodChange = useCallback(async (mood: Mood) => {
+    setSelectedMood(mood);
+    if (!selectedEntry) return;
+    try {
+      await saveEntry({ ...selectedEntry, mood, updatedAt: new Date().toISOString() });
+      await loadEntries();
+    } catch {
+      toast.error('Nie udało się zapisać nastroju');
+    }
+  }, [selectedEntry, loadEntries]);
+
+  // Journal save (used by DayView voice button)
+  const handleSave = useCallback(async (text: string) => {
+    const now = new Date().toISOString();
+    try {
+      if (selectedEntry) {
+        const newContent = selectedEntry.content
+          ? `${selectedEntry.content}<p>${text}</p>`
+          : `<p>${text}</p>`;
+        await saveEntry({ ...selectedEntry, content: newContent, mood: selectedMood, updatedAt: now });
+      } else {
+        await saveEntry({
+          id: uuidv4(),
+          date: selectedDate,
+          title: '',
+          content: `<p>${text}</p>`,
+          mood: selectedMood,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+      await loadEntries();
+    } catch {
+      toast.error('Nie udało się zapisać wpisu');
+    }
+  }, [selectedEntry, selectedDate, selectedMood, loadEntries]);
+
+  // Open Freud chat (called from InputBar)
+  const handleFreudOpen = useCallback((initialMessage?: string) => {
+    setFreudInitialMessage(initialMessage);
+    setFreudOpen(true);
+  }, []);
+
+  const handleFreudClose = useCallback(() => {
+    setFreudOpen(false);
+    setFreudInitialMessage(undefined);
+  }, []);
 
   return (
-    <div className="px-5 pt-8 pb-4 flex flex-col gap-5">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-[family-name:var(--font-display)] tracking-tight">
-          {getGreeting()}
-        </h1>
-        <p className="text-sm text-gray-400 mt-1 capitalize">{formatTodayLabel()}</p>
+    <div className="relative flex flex-col md:flex-row h-full overflow-hidden">
+
+      {/* Animowane blobs tła */}
+      <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
+        <div className="blob-a absolute -top-20 -right-16 w-72 h-72 rounded-full"
+          style={{ background: 'radial-gradient(circle, #4338CA 0%, transparent 70%)', opacity: 0.25 }} />
+        <div className="blob-b absolute -top-8 left-4 w-48 h-48 rounded-full"
+          style={{ background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', opacity: 0.2 }} />
+        <div className="blob-c absolute top-1/2 -left-20 w-72 h-72 rounded-full"
+          style={{ background: 'radial-gradient(circle, #1E3A8A 0%, transparent 70%)', opacity: 0.3 }} />
+        <div className="blob-d absolute top-2/5 right-0 w-56 h-56 rounded-full"
+          style={{ background: 'radial-gradient(circle, #9333EA 0%, transparent 70%)', opacity: 0.2 }} />
+        <div className="blob-b-r absolute -bottom-10 -right-8 w-72 h-72 rounded-full"
+          style={{ background: 'radial-gradient(circle, #BE185D 0%, transparent 70%)', opacity: 0.25 }} />
+        <div className="blob-a-r absolute -bottom-16 left-16 w-56 h-56 rounded-full"
+          style={{ background: 'radial-gradient(circle, #2563EB 0%, transparent 70%)', opacity: 0.2 }} />
       </div>
 
-      <WeekBar />
+      {/* DESKTOP: lewa kolumna */}
+      <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-gray-100/80 overflow-hidden relative z-10">
+        <div className="px-5 pt-6 pb-4 shrink-0">
+          <p className="text-[13px] font-semibold text-gray-400 tracking-wide">
+            mój-dzienniczek.
+          </p>
+        </div>
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <WeekBar
+            selectedDate={selectedDate}
+            onSelectDay={setSelectedDate}
+            entryDates={entryDates}
+            entryMoods={entryMoods}
+            entryExcerpts={entryExcerpts}
+            vertical
+          />
+        </div>
+      </aside>
 
-      <div className="flex flex-col gap-4 mt-2">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Nadaj tytuł..."
-          className="w-full bg-white rounded-xl border border-gray-200 px-3 py-3 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-400 transition-colors"
-        />
+      {/* GŁÓWNA KOLUMNA */}
+      <div className="flex-1 flex flex-col overflow-hidden relative z-10 min-w-0">
 
-        <TipTapEditor
-          key={editorKey}
-          content={content}
-          onChange={setContent}
-          placeholder="Co dzisiaj przeżyłaś?"
-        />
+        {/* Nagłówek — tylko mobile */}
+        <div className="md:hidden relative z-10 px-5 pb-3 shrink-0" style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))' }}>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white font-[family-name:var(--font-display)] tracking-tight">
+            {getGreeting()}
+          </h1>
+          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-gray-400 mt-2">{formatTodayLabel()}</p>
+        </div>
 
-        <MoodSelector value={mood} onChange={setMood} />
+        {/* WeekBar poziomy — tylko mobile */}
+        <div className="md:hidden relative z-10 shrink-0">
+          <WeekBar
+            selectedDate={selectedDate}
+            onSelectDay={setSelectedDate}
+            entryDates={entryDates}
+            entryMoods={entryMoods}
+          />
+        </div>
+
+        {/* DayView */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide relative z-10">
+          <div className="md:max-w-2xl md:mx-auto h-full">
+            <DayView
+              entry={selectedEntry}
+              date={selectedDate}
+              loading={loading}
+              onSave={handleSave}
+              selectedMood={selectedMood}
+              onMoodChange={handleMoodChange}
+            />
+          </div>
+        </div>
+
+        {/* InputBar — wyzwala Freud chat */}
+        <div className="relative z-10 shrink-0">
+          <InputBar onFreudOpen={handleFreudOpen} />
+        </div>
+
       </div>
 
-      <Button
-        onClick={handleSave}
-        className="w-full h-14 rounded-full bg-[#1C1C1E] text-white text-sm font-semibold hover:bg-[#1C1C1E]/90"
-      >
-        Zapisz wpis
-      </Button>
+      {/* FreudChat — bottom sheet overlay */}
+      <FreudChat
+        open={freudOpen}
+        onClose={handleFreudClose}
+        selectedDate={selectedDate}
+        selectedEntry={selectedEntry}
+        allEntries={entries}
+        initialMessage={freudInitialMessage}
+        onInitialMessageConsumed={() => setFreudInitialMessage(undefined)}
+      />
+
     </div>
   );
 }
