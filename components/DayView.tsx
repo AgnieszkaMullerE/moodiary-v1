@@ -199,7 +199,7 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
       >
         {saving ? (
           /* Spinner — zapis w toku */
-          <div className="size-7 rounded-full border-[3px] border-current/20 border-t-current animate-spin" />
+          <div className="size-7 rounded-full border-[3px] border-white/20 border-t-white dark:border-[#1C1C1E]/20 dark:border-t-[#1C1C1E] animate-spin" />
         ) : recording ? (
           /* Kwadrat stop */
           <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24">
