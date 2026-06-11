@@ -193,25 +193,25 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
           'w-20 h-20 rounded-full flex items-center justify-center transition-all active:scale-95',
           recording
             ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-            : 'bg-[#1C1C1E] hover:bg-[#1C1C1E]/90',
+            : 'bg-[#FCFBF9] hover:bg-[#FCFBF9]/90 dark:bg-white dark:hover:bg-white/90',
         ].join(' ')}
         aria-label={recording ? 'Zatrzymaj i zapisz' : 'Nagraj przemyślenia'}
       >
         {saving ? (
           /* Spinner — zapis w toku */
-          <div className="size-7 rounded-full border-[3px] border-white/20 border-t-white animate-spin" />
+          <div className="size-7 rounded-full border-[3px] border-[#1C1C1E]/20 border-t-[#1C1C1E] animate-spin" />
         ) : recording ? (
           /* Kwadrat stop */
           <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24">
-            <rect x="4" y="4" width="16" height="16" rx="2" fill="white" />
+            <rect x="4" y="4" width="16" height="16" rx="2" fill="#1C1C1E" />
           </svg>
         ) : (
-          /* Mikrofon */
+          /* Mikrofon — ikona ciemna na jasnym tle */
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none">
-            <rect x="9" y="2" width="6" height="12" rx="3" stroke="white" strokeWidth="2" />
-            <path d="M5 10c0 3.866 3.134 7 7 7s7-3.134 7-7" stroke="white" strokeWidth="2" strokeLinecap="round" />
-            <path d="M12 17v3" stroke="white" strokeWidth="2" strokeLinecap="round" />
-            <path d="M9 20h6" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            <rect x="9" y="2" width="6" height="12" rx="3" stroke="#1C1C1E" strokeWidth="2" />
+            <path d="M5 10c0 3.866 3.134 7 7 7s7-3.134 7-7" stroke="#1C1C1E" strokeWidth="2" strokeLinecap="round" />
+            <path d="M12 17v3" stroke="#1C1C1E" strokeWidth="2" strokeLinecap="round" />
+            <path d="M9 20h6" stroke="#1C1C1E" strokeWidth="2" strokeLinecap="round" />
           </svg>
         )}
       </button>
