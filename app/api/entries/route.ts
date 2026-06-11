@@ -3,6 +3,14 @@ import type { NextRequest } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import type { Mood } from '@/lib/types';
 
+const MOOD_FROM_SCORE: Record<number, Mood> = {
+  1: 'terrible',
+  2: 'bad',
+  3: 'neutral',
+  4: 'good',
+  5: 'great',
+};
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -63,11 +71,11 @@ async function inferMoodWithAI(content: string): Promise<Mood> {
 
 export async function POST(request: NextRequest) {
   const auth = request.headers.get('authorization');
-  if (!auth || auth !== `Bearer ${process.env.ENTRIES_API_KEY}`) {
+  if (!auth || auth !== `Bearer ${(process.env.ENTRIES_API_KEY ?? '').trim()}`) {
     return Response.json({ error: 'Unauthorized' }, { status: 401, headers: CORS_HEADERS });
   }
 
-  let body: { content?: string; date?: string };
+  let body: { content?: string; date?: string; mood?: number };
   try {
     body = await request.json();
   } catch {
@@ -84,7 +92,16 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Nieprawidłowy format daty. Użyj YYYY-MM-DD' }, { status: 400, headers: CORS_HEADERS });
   }
 
-  const mood = await inferMoodWithAI(content);
+  let mood: Mood;
+  if (body.mood !== undefined) {
+    const score = body.mood;
+    if (!Number.isInteger(score) || score < 1 || score > 5) {
+      return Response.json({ error: 'Pole mood musi być liczbą całkowitą od 1 do 5' }, { status: 400, headers: CORS_HEADERS });
+    }
+    mood = MOOD_FROM_SCORE[score];
+  } else {
+    mood = await inferMoodWithAI(content);
+  }
 
   const supabase = createAdminClient();
 
