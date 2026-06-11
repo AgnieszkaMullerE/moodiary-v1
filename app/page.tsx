@@ -162,7 +162,7 @@ export default function TodayPage() {
       </div>
 
       {/* DESKTOP: lewa kolumna */}
-      <aside className="hidden md:flex flex-col w-[220px] shrink-0 border-r border-gray-100/80 overflow-hidden relative z-10">
+      <aside className="hidden md:flex flex-col w-[300px] shrink-0 border-r border-gray-100/80 overflow-hidden relative z-10">
         <div className="px-5 pt-6 pb-4 shrink-0">
           <p className="text-[13px] font-semibold text-gray-400 tracking-wide">
             mój-dzienniczek.

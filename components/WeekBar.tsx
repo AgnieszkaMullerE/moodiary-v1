@@ -118,22 +118,22 @@ export default function WeekBar({
               ].join(' ')}
             >
               {/* Kolumna: skrót dnia + liczba + twarzyczka */}
-              <div className="flex flex-col items-center w-7 shrink-0">
+              <div className="flex flex-col items-center w-9 shrink-0">
                 <span className={[
-                  'text-[8px] uppercase tracking-widest leading-none mb-0.5',
+                  'text-[10px] uppercase tracking-widest leading-none mb-0.5',
                   isToday ? 'text-gray-500' : 'text-gray-400',
                 ].join(' ')}>
                   {DAY_LABELS[dow]}
                 </span>
                 <span className={[
-                  'text-[15px] font-bold leading-none',
+                  'text-[19px] font-bold leading-none',
                   isSelected ? 'text-gray-900 dark:text-white' : isToday ? 'text-gray-600 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500',
                 ].join(' ')}>
                   {day.getDate()}
                 </span>
                 {mood && (
                   <div className="mt-1.5">
-                    <MoodFace mood={mood} size={13} />
+                    <MoodFace mood={mood} size={15} />
                   </div>
                 )}
               </div>
@@ -141,7 +141,7 @@ export default function WeekBar({
               {/* Fragment tekstu */}
               {excerpt ? (
                 <p className={[
-                  'text-[11px] leading-[1.45] line-clamp-2 flex-1 pt-0.5',
+                  'text-[13px] leading-[1.45] line-clamp-2 flex-1 pt-0.5',
                   isSelected ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400',
                 ].join(' ')}>
                   {excerpt}
