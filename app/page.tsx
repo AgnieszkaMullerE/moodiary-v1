@@ -203,7 +203,7 @@ export default function TodayPage() {
         <button
           type="button"
           onClick={handleLogout}
-          className="md:hidden absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#FCFBF9]/80 ring-1 ring-gray-200 dark:bg-[#2a2760] hover:opacity-80 transition-opacity text-gray-400"
+          className="md:hidden absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#FCFBF9]/80 ring-1 ring-gray-200 dark:bg-[#2a2760] dark:ring-0 hover:opacity-80 transition-opacity text-gray-400"
           aria-label="Wyloguj się"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none">
