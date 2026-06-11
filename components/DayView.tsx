@@ -190,28 +190,28 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
         onClick={handleMicClick}
         disabled={saving}
         className={[
-          'w-20 h-20 rounded-full flex items-center justify-center transition-all active:scale-95',
+          'w-20 h-20 rounded-full flex items-center justify-center transition-all active:scale-95 overflow-hidden transform-gpu',
           recording
-            ? 'bg-red-500 hover:bg-red-600 animate-pulse'
-            : 'bg-[#FCFBF9] hover:bg-[#FCFBF9]/90 dark:bg-white dark:hover:bg-white/90',
+            ? 'bg-red-500 hover:bg-red-600 animate-pulse text-white'
+            : 'bg-[#1C1C1E] hover:bg-[#1C1C1E]/90 text-white dark:bg-white dark:hover:bg-white/90 dark:text-[#1C1C1E]',
         ].join(' ')}
         aria-label={recording ? 'Zatrzymaj i zapisz' : 'Nagraj przemyślenia'}
       >
         {saving ? (
           /* Spinner — zapis w toku */
-          <div className="size-7 rounded-full border-[3px] border-[#1C1C1E]/20 border-t-[#1C1C1E] animate-spin" />
+          <div className="size-7 rounded-full border-[3px] border-current/20 border-t-current animate-spin" />
         ) : recording ? (
           /* Kwadrat stop */
           <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24">
-            <rect x="4" y="4" width="16" height="16" rx="2" fill="#1C1C1E" />
+            <rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" />
           </svg>
         ) : (
-          /* Mikrofon — ikona ciemna na jasnym tle */
+          /* Mikrofon */
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none">
-            <rect x="9" y="2" width="6" height="12" rx="3" stroke="#1C1C1E" strokeWidth="2" />
-            <path d="M5 10c0 3.866 3.134 7 7 7s7-3.134 7-7" stroke="#1C1C1E" strokeWidth="2" strokeLinecap="round" />
-            <path d="M12 17v3" stroke="#1C1C1E" strokeWidth="2" strokeLinecap="round" />
-            <path d="M9 20h6" stroke="#1C1C1E" strokeWidth="2" strokeLinecap="round" />
+            <rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2" />
+            <path d="M5 10c0 3.866 3.134 7 7 7s7-3.134 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M12 17v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M9 20h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         )}
       </button>
