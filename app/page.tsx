@@ -199,27 +199,26 @@ export default function TodayPage() {
       {/* GŁÓWNA KOLUMNA */}
       <div className="flex-1 flex flex-col overflow-hidden relative z-10 min-w-0">
 
+        {/* Wylogowanie — mobile, absolute top-4 right-4 (ta sama pozycja co ThemeToggle na /login) */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="md:hidden absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#FCFBF9]/80 ring-1 ring-gray-200 dark:bg-[#2a2760] hover:opacity-80 transition-opacity text-gray-400"
+          aria-label="Wyloguj się"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
         {/* Nagłówek — tylko mobile */}
-        <div className="md:hidden relative z-10 px-5 pb-3 shrink-0 flex items-start justify-between" style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))' }}>
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white font-[family-name:var(--font-display)] tracking-tight">
-              {getGreeting()}
-            </h1>
-            <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-gray-400 mt-2">{formatTodayLabel()}</p>
-          </div>
-          {/* Wylogowanie — mobile */}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="mt-1 w-8 h-8 flex items-center justify-center rounded-full bg-[#FCFBF9] ring-1 ring-gray-200 dark:bg-[#212143] dark:ring-white/20 hover:opacity-80 transition-opacity text-gray-400"
-            aria-label="Wyloguj się"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+        <div className="md:hidden relative z-10 px-5 pb-3 shrink-0" style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))' }}>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white font-[family-name:var(--font-display)] tracking-tight">
+            {getGreeting()}
+          </h1>
+          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-gray-400 mt-2">{formatTodayLabel()}</p>
         </div>
 
         {/* WeekBar poziomy — tylko mobile */}
