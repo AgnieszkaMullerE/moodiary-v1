@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import WeekBar from '@/components/WeekBar';
@@ -8,6 +9,7 @@ import DayView from '@/components/DayView';
 import InputBar from '@/components/InputBar';
 import FreudChat from '@/components/FreudChat';
 import { getEntries, saveEntry } from '@/lib/storage';
+import { createClient } from '@/lib/supabase/client';
 import type { Entry, Mood } from '@/lib/types';
 
 function todayStr(): string {
@@ -42,6 +44,7 @@ function stripHtml(html: string): string {
 }
 
 export default function TodayPage() {
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,6 +136,12 @@ export default function TodayPage() {
     setFreudInitialMessage(undefined);
   }, []);
 
+  const handleLogout = useCallback(async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+  }, [router]);
+
   return (
     <div className="relative flex flex-col md:flex-row h-full overflow-hidden">
 
@@ -169,17 +178,48 @@ export default function TodayPage() {
             vertical
           />
         </div>
+        {/* Wylogowanie — desktop */}
+        <div className="px-5 py-4 shrink-0 border-t border-gray-100/80">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-[12px] text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Wyloguj się"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Wyloguj
+          </button>
+        </div>
       </aside>
 
       {/* GŁÓWNA KOLUMNA */}
       <div className="flex-1 flex flex-col overflow-hidden relative z-10 min-w-0">
 
         {/* Nagłówek — tylko mobile */}
-        <div className="md:hidden relative z-10 px-5 pb-3 shrink-0" style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))' }}>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white font-[family-name:var(--font-display)] tracking-tight">
-            {getGreeting()}
-          </h1>
-          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-gray-400 mt-2">{formatTodayLabel()}</p>
+        <div className="md:hidden relative z-10 px-5 pb-3 shrink-0 flex items-start justify-between" style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))' }}>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white font-[family-name:var(--font-display)] tracking-tight">
+              {getGreeting()}
+            </h1>
+            <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-gray-400 mt-2">{formatTodayLabel()}</p>
+          </div>
+          {/* Wylogowanie — mobile */}
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-1 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-400 hover:text-gray-600"
+            aria-label="Wyloguj się"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </div>
 
         {/* WeekBar poziomy — tylko mobile */}
