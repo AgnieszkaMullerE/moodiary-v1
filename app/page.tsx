@@ -184,19 +184,19 @@ export default function TodayPage() {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex items-center gap-2 text-[12px] text-gray-400 hover:text-gray-600 transition-colors"
+            className="flex items-center gap-2 text-[12px] text-black/80 dark:text-white hover:opacity-60 transition-opacity"
             aria-label="Wyloguj się"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M18.4 5.6A9 9 0 1 0 18.4 18.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M8 12h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M16 8.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             Wyloguj
           </button>
           <Link
             href="/docs"
-            className="flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+            className="flex items-center justify-center text-black/80 dark:text-white hover:opacity-60 transition-opacity"
             aria-label="Dokumentacja API"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -210,33 +210,37 @@ export default function TodayPage() {
       {/* GŁÓWNA KOLUMNA */}
       <div className="flex-1 flex flex-col overflow-hidden relative z-10 min-w-0">
 
-        {/* Dokumentacja — mobile */}
-        <Link
-          href="/docs"
-          className="md:hidden absolute top-4 right-14 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#FCFBF9]/80 dark:bg-[#2a2760] hover:opacity-80 transition-opacity text-gray-400"
-          aria-label="Dokumentacja API"
+        {/* Top bar — mobile: ikony dokumentacji i wylogowania */}
+        <div
+          className="md:hidden relative z-20 flex items-center justify-end gap-2 px-4 shrink-0"
+          style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </Link>
-        {/* Wylogowanie — mobile, absolute top-4 right-4 (ta sama pozycja co ThemeToggle na /login) */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="md:hidden absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#FCFBF9]/80 dark:bg-[#2a2760] hover:opacity-80 transition-opacity text-gray-400"
-          aria-label="Wyloguj się"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <polyline points="16 17 21 12 16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+          <Link
+            href="/docs"
+            className="w-[34px] h-[34px] rounded-full bg-white dark:bg-[#3A3060] flex items-center justify-center hover:opacity-70 transition-opacity text-gray-500 dark:text-white"
+            aria-label="Dokumentacja API"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-[34px] h-[34px] rounded-full bg-white dark:bg-[#3A3060] flex items-center justify-center hover:opacity-70 transition-opacity text-gray-500 dark:text-white"
+            aria-label="Wyloguj się"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M18.4 5.6A9 9 0 1 0 18.4 18.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M8 12h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M16 8.5l4 3.5-4 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
 
         {/* Nagłówek — tylko mobile */}
-        <div className="md:hidden relative z-10 px-5 pb-3 shrink-0" style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))' }}>
+        <div className="md:hidden relative z-10 px-5 pt-5 pb-3 shrink-0">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white font-[family-name:var(--font-display)] tracking-tight">
             {getGreeting()}
           </h1>

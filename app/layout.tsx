@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 const inter = Inter({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   variable: '--font-inter',
   weight: ['300', '400', '500', '600', '700'],
   style: ['normal', 'italic'],
@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   variable: '--font-display',
   weight: ['300', '400', '500', '600', '700'],
   style: ['normal', 'italic'],
