@@ -76,7 +76,6 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const finalTextRef = useRef('');
   const interimTextRef = useRef('');
-  const shouldSaveRef = useRef(false);
   const onSaveRef = useRef(onSave);
   onSaveRef.current = onSave;
 
@@ -99,7 +98,6 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
 
     finalTextRef.current = '';
     interimTextRef.current = '';
-    shouldSaveRef.current = false;
     setTranscript('');
 
     const recognition = new SR();
@@ -127,7 +125,6 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
     recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
       if (e.error === 'aborted' || e.error === 'no-speech') return;
       console.error('SpeechRecognition error:', e.error);
-      shouldSaveRef.current = false;
       setRecording(false);
       recognitionRef.current = null;
     };
@@ -135,37 +132,32 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
     recognition.onend = () => {
       setRecording(false);
       recognitionRef.current = null;
-      /* Zapisz dopiero po onend — wtedy API sfinalalizowało wszystkie wyniki */
-      if (shouldSaveRef.current) {
-        shouldSaveRef.current = false;
-        const combined = (
-          finalTextRef.current +
-          (interimTextRef.current
-            ? (finalTextRef.current ? ' ' : '') + interimTextRef.current
-            : '')
-        ).trim();
-        doSave(combined);
-      }
     };
 
     recognitionRef.current = recognition;
     recognition.start();
     setRecording(true);
-  }, [doSave]);
+  }, []);
 
   const handleMicClick = useCallback(() => {
     if (saving) return;
 
     if (recording) {
-      /* Ustaw flagę zapisu, zatrzymaj — zapis nastąpi w onend */
-      shouldSaveRef.current = true;
+      /* Zbierz tekst natychmiast przy naciśnięciu stop — nie czekaj na onend */
+      const textToSave = (
+        finalTextRef.current +
+        (interimTextRef.current
+          ? (finalTextRef.current ? ' ' : '') + interimTextRef.current
+          : '')
+      ).trim();
       recognitionRef.current?.stop();
       recognitionRef.current = null;
       setRecording(false);
+      if (textToSave) doSave(textToSave);
     } else {
       startRecording();
     }
-  }, [recording, saving, startRecording]);
+  }, [recording, saving, startRecording, doSave]);
 
   return (
     <div className="flex flex-col items-center">
