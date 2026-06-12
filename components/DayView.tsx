@@ -132,30 +132,28 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
       recognitionRef.current = null;
     };
 
+    /* Zapis zawsze w onend — działa zarówno gdy użytkownik kliknie stop,
+       jak i gdy Chrome sam zatrzyma recognition (częste na mobile) */
     recognition.onend = () => {
       setRecording(false);
       recognitionRef.current = null;
+      const text = transcriptRef.current.trim();
+      if (text) doSave(text);
     };
 
     recognitionRef.current = recognition;
     recognition.start();
     setRecording(true);
-  }, []);
+  }, [doSave]);
 
   const handleMicClick = useCallback(() => {
     if (saving) return;
-
     if (recording) {
-      /* Użyj transcriptRef — dokładnie to co widać w UI */
-      const textToSave = transcriptRef.current.trim();
       recognitionRef.current?.stop();
-      recognitionRef.current = null;
-      setRecording(false);
-      if (textToSave) doSave(textToSave);
     } else {
       startRecording();
     }
-  }, [recording, saving, startRecording, doSave]);
+  }, [recording, saving, startRecording]);
 
   return (
     <div className="flex flex-col items-center">
