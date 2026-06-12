@@ -76,6 +76,7 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const finalTextRef = useRef('');
   const interimTextRef = useRef('');
+  const transcriptRef = useRef('');
   const onSaveRef = useRef(onSave);
   onSaveRef.current = onSave;
 
@@ -87,6 +88,7 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
       setTranscript('');
       finalTextRef.current = '';
       interimTextRef.current = '';
+      transcriptRef.current = '';
     } finally {
       setSaving(false);
     }
@@ -98,6 +100,7 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
 
     finalTextRef.current = '';
     interimTextRef.current = '';
+    transcriptRef.current = '';
     setTranscript('');
 
     const recognition = new SR();
@@ -117,9 +120,9 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
         }
       }
       interimTextRef.current = interim;
-      setTranscript(
-        finalTextRef.current + (interim ? (finalTextRef.current ? ' ' : '') + interim : '')
-      );
+      const fullText = finalTextRef.current + (interim ? (finalTextRef.current ? ' ' : '') + interim : '');
+      transcriptRef.current = fullText;
+      setTranscript(fullText);
     };
 
     recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
@@ -143,13 +146,8 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
     if (saving) return;
 
     if (recording) {
-      /* Zbierz tekst natychmiast przy naciśnięciu stop — nie czekaj na onend */
-      const textToSave = (
-        finalTextRef.current +
-        (interimTextRef.current
-          ? (finalTextRef.current ? ' ' : '') + interimTextRef.current
-          : '')
-      ).trim();
+      /* Użyj transcriptRef — dokładnie to co widać w UI */
+      const textToSave = transcriptRef.current.trim();
       recognitionRef.current?.stop();
       recognitionRef.current = null;
       setRecording(false);
