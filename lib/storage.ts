@@ -50,9 +50,20 @@ export async function saveEntry(entry: Entry): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Brak zalogowanego użytkownika');
 
+  // Reuse existing row id if an entry for this date already exists in the DB.
+  // Prevents 409 from the unique constraint on `date` when the client has
+  // a stale state and tries to INSERT with a freshly-generated UUID.
+  const { data: existing } = await supabase
+    .from('entries')
+    .select('id')
+    .eq('date', entry.date)
+    .maybeSingle();
+
+  const id = existing?.id ?? entry.id;
+
   const { error } = await supabase.from('entries').upsert(
     {
-      id: entry.id,
+      id,
       date: entry.date,
       title: entry.title,
       content: entry.content,
