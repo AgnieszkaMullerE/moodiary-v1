@@ -74,9 +74,9 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
   const [saving, setSaving] = useState(false);
   const [transcript, setTranscript] = useState('');
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const finalTextRef = useRef('');
-  const interimTextRef = useRef('');
+  const accumulatedRef = useRef('');  // tekst z poprzednich sesji (auto-restart)
   const transcriptRef = useRef('');
+  const activeRef = useRef(false);    // czy użytkownik chce nagrywać
   const onSaveRef = useRef(onSave);
   onSaveRef.current = onSave;
 
@@ -86,70 +86,71 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
     try {
       await onSaveRef.current(text);
       setTranscript('');
-      finalTextRef.current = '';
-      interimTextRef.current = '';
+      accumulatedRef.current = '';
       transcriptRef.current = '';
     } finally {
       setSaving(false);
     }
   }, []);
 
-  const startRecording = useCallback(() => {
+  /* Uruchamia pojedynczą sesję rozpoznawania (continuous=false → jeden slot,
+     zero duplikatów). onend auto-restartuje jeśli użytkownik wciąż nagrywa. */
+  const launchSession = useCallback(() => {
     const SR = window.SpeechRecognition ?? window.webkitSpeechRecognition;
     if (!SR) return;
 
-    finalTextRef.current = '';
-    interimTextRef.current = '';
-    transcriptRef.current = '';
-    setTranscript('');
-
     const recognition = new SR();
     recognition.lang = 'pl-PL';
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = true;
 
     recognition.onresult = (e: SpeechRecognitionEvent) => {
-      let final = '';
-      let interim = '';
-      for (let i = 0; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) {
-          final += (final ? ' ' : '') + t.trim();
-        } else {
-          interim = t;
-        }
+      const last = e.results[e.results.length - 1];
+      const t = last[0].transcript;
+      if (last.isFinal) {
+        accumulatedRef.current += (accumulatedRef.current ? ' ' : '') + t.trim();
       }
-      finalTextRef.current = final;
-      interimTextRef.current = interim;
-      const fullText = final + (interim ? (final ? ' ' : '') + interim : '');
-      transcriptRef.current = fullText;
-      setTranscript(fullText);
+      const interim = last.isFinal ? '' : t;
+      const full = accumulatedRef.current + (interim ? (accumulatedRef.current ? ' ' : '') + interim : '');
+      transcriptRef.current = full;
+      setTranscript(full);
     };
 
     recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
       if (e.error === 'aborted' || e.error === 'no-speech') return;
       console.error('SpeechRecognition error:', e.error);
+      activeRef.current = false;
       setRecording(false);
-      recognitionRef.current = null;
     };
 
-    /* Zapis zawsze w onend — działa zarówno gdy użytkownik kliknie stop,
-       jak i gdy Chrome sam zatrzyma recognition (częste na mobile) */
     recognition.onend = () => {
-      setRecording(false);
       recognitionRef.current = null;
-      const text = transcriptRef.current.trim();
-      if (text) doSave(text);
+      if (activeRef.current) {
+        launchSession();  // auto-restart: Chrome zatrzymał sesję, użytkownik nadal nagrywa
+      } else {
+        setRecording(false);
+        const text = transcriptRef.current.trim();
+        if (text) doSave(text);
+      }
     };
 
     recognitionRef.current = recognition;
     recognition.start();
-    setRecording(true);
   }, [doSave]);
+
+  const startRecording = useCallback(() => {
+    accumulatedRef.current = '';
+    transcriptRef.current = '';
+    setTranscript('');
+    activeRef.current = true;
+    setRecording(true);
+    launchSession();
+  }, [launchSession]);
 
   const handleMicClick = useCallback(() => {
     if (saving) return;
     if (recording) {
+      activeRef.current = false;         // onend zapisze tekst zamiast restartować
       recognitionRef.current?.stop();
     } else {
       startRecording();
