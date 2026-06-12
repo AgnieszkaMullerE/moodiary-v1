@@ -109,18 +109,19 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
     recognition.interimResults = true;
 
     recognition.onresult = (e: SpeechRecognitionEvent) => {
+      let final = '';
       let interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
+      for (let i = 0; i < e.results.length; i++) {
         const t = e.results[i][0].transcript;
         if (e.results[i].isFinal) {
-          finalTextRef.current += (finalTextRef.current ? ' ' : '') + t.trim();
-          interimTextRef.current = '';
+          final += (final ? ' ' : '') + t.trim();
         } else {
           interim = t;
         }
       }
+      finalTextRef.current = final;
       interimTextRef.current = interim;
-      const fullText = finalTextRef.current + (interim ? (finalTextRef.current ? ' ' : '') + interim : '');
+      const fullText = final + (interim ? (final ? ' ' : '') + interim : '');
       transcriptRef.current = fullText;
       setTranscript(fullText);
     };
