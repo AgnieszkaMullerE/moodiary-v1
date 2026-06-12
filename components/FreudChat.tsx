@@ -149,12 +149,16 @@ export default function FreudChat({
         }),
       });
 
-      if (!res.ok) throw new Error('AI error');
+      if (!res.ok) {
+        const errText = await res.text().catch(() => String(res.status));
+        console.error('Freud API error:', res.status, errText);
+        throw new Error('AI error');
+      }
       const { content } = await res.json();
 
       const withFreud = appendMessage(withUser, 'freud', content);
       setSession(withFreud);
-      await saveFreudSession(withFreud);
+      saveFreudSession(withFreud).catch(console.error);
     } catch {
       const withError = appendMessage(withUser, 'freud', 'Entschuldigung... Coś poszło nie tak. Proszę spróbować ponownie.');
       setSession(withError);
