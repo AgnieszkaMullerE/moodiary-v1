@@ -103,14 +103,19 @@ export default function TodayPage() {
   // Journal save (used by DayView voice button)
   const handleSave = useCallback(async (text: string) => {
     const now = new Date().toISOString();
+    let saved: Entry;
     try {
       if (selectedEntry) {
-        const newContent = selectedEntry.content
-          ? `${selectedEntry.content}<p>${text}</p>`
-          : `<p>${text}</p>`;
-        await saveEntry({ ...selectedEntry, content: newContent, mood: selectedMood, updatedAt: now });
+        saved = {
+          ...selectedEntry,
+          content: selectedEntry.content
+            ? `${selectedEntry.content}<p>${text}</p>`
+            : `<p>${text}</p>`,
+          mood: selectedMood,
+          updatedAt: now,
+        };
       } else {
-        await saveEntry({
+        saved = {
           id: uuidv4(),
           date: selectedDate,
           title: '',
@@ -118,12 +123,21 @@ export default function TodayPage() {
           mood: selectedMood,
           createdAt: now,
           updatedAt: now,
-        });
+        };
       }
-      await loadEntries();
-    } catch {
+      await saveEntry(saved);
+    } catch (err) {
+      console.error('saveEntry error:', err);
       toast.error('Nie udało się zapisać wpisu');
+      return;
     }
+    // Optimistic update — UI shows the entry immediately
+    setEntries((prev) => {
+      const without = prev.filter((e) => e.date !== saved.date);
+      return [saved, ...without].sort((a, b) => b.date.localeCompare(a.date));
+    });
+    // Background refresh (non-critical — don't block UI on failure)
+    loadEntries().catch(console.error);
   }, [selectedEntry, selectedDate, selectedMood, loadEntries]);
 
   // Open Freud chat (called from InputBar)
