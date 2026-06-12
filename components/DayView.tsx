@@ -125,9 +125,8 @@ function VoiceButton({ onSave }: { onSave?: (text: string) => Promise<void> }) {
     };
 
     recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
-      if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        console.error('SpeechRecognition error:', e.error);
-      }
+      if (e.error === 'aborted' || e.error === 'no-speech') return;
+      console.error('SpeechRecognition error:', e.error);
       shouldSaveRef.current = false;
       setRecording(false);
       recognitionRef.current = null;
