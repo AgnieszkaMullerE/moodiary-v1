@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import WeekBar from '@/components/WeekBar';
@@ -178,8 +179,8 @@ export default function TodayPage() {
             vertical
           />
         </div>
-        {/* Wylogowanie — desktop */}
-        <div className="px-5 py-4 shrink-0 border-t border-gray-100/80">
+        {/* Wylogowanie + Dokumentacja — desktop */}
+        <div className="px-5 py-4 shrink-0 border-t border-gray-100/80 flex items-center justify-between">
           <button
             type="button"
             onClick={handleLogout}
@@ -193,17 +194,38 @@ export default function TodayPage() {
             </svg>
             Wyloguj
           </button>
+          <Link
+            href="/docs"
+            className="flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+            aria-label="Dokumentacja API"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </Link>
         </div>
       </aside>
 
       {/* GŁÓWNA KOLUMNA */}
       <div className="flex-1 flex flex-col overflow-hidden relative z-10 min-w-0">
 
+        {/* Dokumentacja — mobile */}
+        <Link
+          href="/docs"
+          className="md:hidden absolute top-4 right-14 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#FCFBF9]/80 dark:bg-[#2a2760] hover:opacity-80 transition-opacity text-gray-400"
+          aria-label="Dokumentacja API"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Link>
         {/* Wylogowanie — mobile, absolute top-4 right-4 (ta sama pozycja co ThemeToggle na /login) */}
         <button
           type="button"
           onClick={handleLogout}
-          className="md:hidden absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#FCFBF9]/80 ring-1 ring-gray-200 dark:bg-[#2a2760] dark:ring-0 hover:opacity-80 transition-opacity text-gray-400"
+          className="md:hidden absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#FCFBF9]/80 dark:bg-[#2a2760] hover:opacity-80 transition-opacity text-gray-400"
           aria-label="Wyloguj się"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none">

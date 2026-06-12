@@ -4,11 +4,14 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Przepuść callback OAuth, reset hasła i API z własną autoryzacją
+  // Przepuść callback OAuth, reset hasła, API z własną autoryzacją i stronę docs
   if (
     pathname.startsWith('/auth/callback') ||
     pathname.startsWith('/auth/reset-password') ||
-    pathname.startsWith('/api/entries')
+    pathname.startsWith('/api/entries') ||
+    pathname.startsWith('/api/freud/ask') ||
+    pathname.startsWith('/api/mcp') ||
+    pathname === '/docs'
   ) {
     return NextResponse.next({ request })
   }

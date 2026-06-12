@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { checkApiAuth } from '@/lib/api-auth';
 import type { NextRequest } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import type { Mood } from '@/lib/types';
@@ -70,8 +71,7 @@ async function inferMoodWithAI(content: string): Promise<Mood> {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = request.headers.get('authorization');
-  if (!auth || auth !== `Bearer ${(process.env.ENTRIES_API_KEY ?? '').trim()}`) {
+  if (!(await checkApiAuth(request))) {
     return Response.json({ error: 'Unauthorized' }, { status: 401, headers: CORS_HEADERS });
   }
 
